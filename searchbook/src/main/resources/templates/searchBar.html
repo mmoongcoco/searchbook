@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>책검색 | main</title>
+    <style>
+        .searchBar {
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .searchTop10 {
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        * {
+            margin: 0px;
+            box-sizing: border-box;
+            font-size: 11px;
+        }
+
+        html {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        body {
+            width: 45%;
+            border: 1px solid black;
+        }
+
+        input {
+            border: 1px solid black;
+            border-radius: 3px;
+            line-height: 35px;
+            font-size: 12px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        wrapper {
+            padding: 10px;
+        }
+
+        div {
+            padding-top: 3px;
+            padding-bottom: 8px;
+
+        }
+
+        .title {
+            text-align: center;
+            font-weight: 700;
+        }
+
+        div.searchBar {
+            width: 80%;
+            text-align: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        #searchBookText {
+            width: 350px;
+        }
+
+        .changePage{
+            padding: 5px;
+        }
+
+        .pagingAndBtn{
+            text-align: center;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="searchBar">
+        <div class="title"><h1 style="font-size: 21px;">책검색</h1></div>
+        <form onsubmit="return false">
+            <input id="searchBookText" type="text" placeholder="검색어를 입력하세요" value="">
+            <input type="button" onclick="press()" value="검색">
+        </form>
+    </div>
+
+    <div class="line">
+        <hr>
+    </div>
+
+</header>
+
+<wrapper>
+    <div>
+        <table border="0"
+               width="100%"
+               height="200"
+               cellspacing="5">
+            <caption></caption>
+            <thead>
+            <tr align="center" bgcolor="white">
+                <td>번호</td>
+                <th>책제목</th>
+                <th>저자</th>
+                <th>가격</th>
+            </tr>
+            </thead>
+
+            <tbody id="resultBox">
+
+
+            </tbody>
+        </table>
+        <section id="pageSection">
+            <div class="pagingAndBtn">
+                <span class="pagination pagination-sm clearfix">
+                </span>
+            </div>
+        </section>
+    </div>
+
+    <div class="line">
+        <hr>
+    </div>
+
+    <div>
+        <table border="0"
+               width="50%"
+               height="200"
+               cellspacing="5"
+               style="float: left">
+            <caption>검색어 TOP 10</caption>
+            <thead>
+            <tr align="center" bgcolor="white">
+                <td>순위</td>
+                <th>검색어</th>
+                <th>검색횟수</th>
+            </tr>
+            </thead>
+
+            <tbody class="searchTop10">
+
+
+
+
+
+            </tbody>
+        </table>
+
+        <table border="0"
+               width="50%"
+               height="200"
+               cellspacing="5"
+        style="float: left">
+            <caption>내 검색 히스토리</caption>
+            <thead>
+            <tr align="center" bgcolor="white">
+                <th>검색어</th>
+                <th>검색일시</th>
+            </tr>
+            </thead>
+
+            <tbody class="myHistory">
+
+
+
+            </tbody>
+        </table>
+    </div>
+
+</wrapper>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+<script src=""></script>
+<script>
+    // let searchBookText = $("#searchBookText");
+
+    globalThis.page = 1;
+    globalThis.keyword = "";
+
+    top10();
+    myhistory10();
+
+    function press() {
+
+        globalThis.keyword = $("#searchBookText").val();
+        save(keyword);
+        myHistory(keyword);
+        show(keyword);
+
+    }
+
+    function save(keyword,callback) {
+        $.ajax({
+            url: "/sea/savekeyword",
+            type: "post",
+            data: JSON.stringify(keyword),
+            contentType: "application/json; charset=utf-8",
+            success: function (result) {
+                if (callback){
+                    callback(result);
+                }
+            }
+        })
+    }
+
+
+    function show(keyword) {
+
+        $.ajax({
+            method: "GET",
+            url: "https://dapi.kakao.com/v3/search/book?target=title",
+            data: {query: keyword, page : globalThis.page, size : 10},
+            headers: {Authorization: "KakaoAK e6436358d6552346945f6239fa72b802"},
+            success : function (books) {
+                if (books != null){
+                    article(books);
+                    top10();
+                    myhistory10();
+                }
+            }
+        })
+    }
+
+    function article(books) {
+        let count = books.meta.total_count;
+        let end = books.meta.total_count/10; // 소수점 X
+        let text = "";
+        $(books.documents).each((i,book) => {
+            text += `<tr align="center" bgcolor="white">`;
+            if (i == 9){
+                text += `<th>`+ (globalThis.page + "") + 0 +`</th>`;
+            }else {
+                text += `<th>`+ (globalThis.page-1 + "") + (i+1)+`</th>`;
+            }
+            text += `<td><a>`+ book.title +`</a></td>`;
+            text += `<td>`+ book.authors + `</td>`;
+            text += `<td>`+ book.price + `</td>`;
+            text += `</tr>`;
+        });
+
+        $("#resultBox").html(text);
+        pagination(count, end);
+
+
+    }
+
+    function pagination(count, end) {
+        let endNumber = Math.ceil(globalThis.page / 5) * 5;
+        let startNumber = endNumber - 4;
+        let realEnd = end;
+
+        if (endNumber > realEnd) {
+            endNumber = realEnd == 0 ? '1' : realEnd;
+        }
+
+        let prev = startNumber > 1;
+        let next = endNumber < realEnd;
+
+        console.log(" endNumber : " + endNumber);
+        console.log(" realEnd : " + realEnd);
+
+        let pageText = '';
+
+        if (prev) {
+            pageText += `<a class="btn_paging prev screen_out changePage paging" href="` + (startNumber - 1) + `"><</a>`
+        }
+        for (let i = startNumber; i <= endNumber; i++) {
+            if (globalThis.page == i) {
+                pageText += `<a class="active changePage">` + i + `</a>`
+                continue;
+            }
+            pageText += `<a class="changePage paging" href="` + i + `">` + i + `</a>`
+        }
+        if (next) {
+            pageText += `<a class="btn_paging next screen_out changePage paging" href="` + (endNumber + 1) + `">></a>`
+        }
+
+        $(".pagination-sm").html(pageText);
+    }
+
+    $("div.pagingAndBtn").on("click", "a.changePage", function (e) {
+        e.preventDefault();
+        globalThis.page = $(this).attr("href");
+        // alert(globalThis.page);
+        show(keyword);
+    });
+
+
+
+    function top10() {
+        $.ajax({
+            url: "/sea/top10",
+            type: "Post",
+            success : function (counts) {
+                console.log("counts : " + counts);
+                if (counts != null){
+                    articleTop10(counts);
+                }
+            }
+        });
+
+    }
+
+    function articleTop10(counts) {
+        let text = "";
+
+        $(counts).each((i,count) => {
+            text += `<tr align="center" bgcolor="white">`;
+            text += `<th>`+(i+1)+`</th>`;
+            text += `<td>`+ count.countKeyword +`</td>`;
+            text += `<td>`+ count.countNumber +`</td>`;
+            text += `</tr>`;
+        });
+        $(".searchTop10").html(text);
+    }
+
+
+    function myHistory(keyword, callback) {
+        let userId = [[${session.loginUserId}]];
+        // alert("userId" + userId);
+        $.ajax({
+            url: "/sea/saveMyHistory",
+            type: "Post",
+            data: JSON.stringify(keyword),
+            contentType: "application/json; charset=utf-8",
+            success: function (result) {
+                if (callback){
+                    callback(result);
+
+                }
+            }
+        });
+    }
+
+
+    function myhistory10() {
+        $.ajax({
+            url: "/sea/myhistory10",
+            type: "Post",
+            success : function (myHistories) {
+                console.log("counts : " + myHistories);
+                if (myHistories != null){
+                    articleMyHistory(myHistories);
+                }
+            }
+        });
+
+    }
+
+    function articleMyHistory(myHistories) {
+        let text = "";
+        $(myHistories).each((i,myHistory) => {
+            text += `<tr align="center" bgcolor="white">`;
+            text += `<td>` + myHistory.keyword + `</td>`;
+            text += `<td>` + myHistory.createdDate + `</td>`;
+            text += `</tr>`;
+        });
+        $(".myHistory").html(text);
+    }
+</script>
+</html>

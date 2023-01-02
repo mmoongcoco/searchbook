@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>책검색 | intro</title>
+    <link rel="stylesheet" href="/css/signup.css">
+</head>
+<body>
+<div class="wrapper">
+    <div class="title"><h1 style="font-size: 21px;">안녕하세요</h1></div>
+    <div class="line">
+        <hr>
+    </div>
+    <div class="signUp login">
+        <button id="goLoginButton" onclick="goLogin()">로그인</button>
+    </div>
+    <div class="signUp">
+        <button id="goSignUpButton" onclick="goSignUp()">회원가입</button>
+    </div>
+</div>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+<script>
+
+    /* 로그인으로 이동 */
+    function goLogin() {
+        location.href = "/login/checkuser";
+    }
+
+    /* 회원가입으로 이동 */
+    function goSignUp() {
+        location.href = "/signup/add";
+    }
+</script>
+</html>

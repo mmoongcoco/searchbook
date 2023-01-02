@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>책검색 | 회원가입</title>
+    <link rel="stylesheet" href="/css/signup.css">
+    <style>
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+        <div class="title"><h1 style="font-size: 21px;">책검색 회원가입</h1></div>
+    <form name="signupForm" th:method="post" th:action="@{/signup/ok}" th:object="${userDTO}">
+        <div class="email">
+            <input th:field="*{userEmail}" id="email" type="text" placeholder="이메일을 입력해 주세요." style="width: 80%;">
+            <input type="button" onclick="checkEmailDuplication()" value="중복검사" style="width: 19%;">
+            <div id="emailError" class="error"></div>
+        </div>
+        <div class="name">
+            <input th:field="*{userName}" id="name" type="text" placeholder="이름을 입력해 주세요.">
+            <div id="nameError" class="error"></div>
+        </div>
+        <div class="password">
+            <input th:field="*{userPassword}" id="password" type="password" placeholder="비밀번호를 입력해 주세요.">
+            <div id="passwordError" class="error"></div>
+        </div>
+        <div class="passwordCheck">
+            <input id="passwordCheck" type="password" placeholder="비밀번호를 다시 입력해 주세요.">
+            <div id="passwordCheckError" class="error"></div>
+        </div>
+        <div class="line">
+            <hr>
+        </div>
+    </form>
+        <div class="signUp">
+            <button id="signUpButton" onclick="signUpCheck()">가입하기</button>
+        </div>
+
+</div>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+<script>
+    globalThis.emailDuplicate = false;
+    // 가입부분 체크
+    function signUpCheck() {
+
+        let email = document.getElementById("email").value
+        let name = document.getElementById("name").value
+        let password = document.getElementById("password").value
+        let passwordCheck = document.getElementById("passwordCheck").value
+        let check = true;
+
+
+        // 이메일확인
+        if (email.includes('@')) {
+            let emailId = email.split('@')[0]
+            let emailServer = email.split('@')[1]
+
+            if (emailId === "" || emailServer === "") {
+                document.getElementById("emailError").innerHTML = "이메일이 올바르지 않습니다."
+                check = false
+            } else {
+                document.getElementById("emailError").innerHTML = ""
+            }
+        } else {
+            document.getElementById("emailError").innerHTML = "이메일이 올바르지 않습니다."
+            check = false
+        }
+
+
+        // 이름확인
+        if (name === "") {
+            document.getElementById("nameError").innerHTML = "이름이 올바르지 않습니다."
+            check = false
+        } else {
+            document.getElementById("nameError").innerHTML = ""
+        }
+
+
+        // 비밀번호 확인
+        if (password !== passwordCheck) {
+            document.getElementById("passwordError").innerHTML = ""
+            document.getElementById("passwordCheckError").innerHTML = "비밀번호가 동일하지 않습니다."
+            check = false
+        } else {
+            document.getElementById("passwordError").innerHTML = ""
+            document.getElementById("passwordCheckError").innerHTML = ""
+        }
+
+        if (password === "") {
+            document.getElementById("passwordError").innerHTML = "비밀번호를 입력해주세요."
+            check = false
+        }
+
+        if (passwordCheck === "") {
+            document.getElementById("passwordCheckError").innerHTML = "비밀번호를 다시 입력해주세요."
+            check = false
+        }
+        if(!globalThis.emailDuplicate){
+            alert("중복검사를 확인하세요")
+        }
+        console.log(" 밖 check : "+check);
+        console.log(" 밖 emailDuplicate : "+ globalThis.emailDuplicate);
+
+        if (check && globalThis.emailDuplicate) {
+            console.log(" 안 check : "+check);
+            console.log(" 안 emailDuplicate : "+ globalThis.emailDuplicate);
+            document.getElementById("emailError").innerHTML = ""
+            document.getElementById("nameError").innerHTML = ""
+            document.getElementById("passwordError").innerHTML = ""
+            document.getElementById("passwordCheckError").innerHTML = ""
+
+            //비동기 처리이벤트
+            setTimeout(function () {
+                alert("가입이 완료되었습니다.");
+                sendData();
+            }, 0);
+        }
+    }
+
+    //이메일 중복검사하는 js
+    function checkEmailDuplication() {
+        const userEmail = $("#email").val();
+        $.ajax({
+            url: "/signup/checkEmail",
+            type: "get",
+            data: {userEmail: userEmail},
+            contentType: "application/json; charset=utf-8",
+            success: function (result) {
+                if (result) {
+                    alert("중복된 이메일 입니다");
+                    globalThis.emailDuplicate = false;
+                } else {
+                    alert("사용 가능한 이메일 입니다");
+                    globalThis.emailDuplicate = true;
+                }
+
+            }
+        })
+    }
+
+    function sendData() {
+        signupForm.submit();
+
+    }
+
+
+</script>
+</html>
